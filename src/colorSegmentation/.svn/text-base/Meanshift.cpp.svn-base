@@ -1,0 +1,79 @@
+#include "Meanshift.hpp"
+
+Meanshift::Meanshift(){
+
+}
+
+void Meanshift::predictMeanshift(Mat frame){
+  Point trackingSize(50, 50);
+  Point objectSize(30, 30);
+
+  const int channels[] = { 0, 1 };
+  float range[] = { 0, 256 };
+  const float *ranges[] = { range, range };
+  calcBackProject(&frame, 1, channels, objectHistogram, bp, ranges);
+  
+  /*
+  // Create a structuring element
+  int erosion_size = 1;  
+  Mat erosionElement = getStructuringElement(cv::MORPH_CROSS,
+    cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1),
+    cv::Point(erosion_size, erosion_size) );
+  erode( bp, bp, erosionElement );
+  */
+
+  Rect trackingWindow(objectPosition.x, objectPosition.y, trackingSize.x, trackingSize.y);
+  meanShift(bp, trackingWindow, TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 50, 1));
+
+  meanPoint.x = trackingWindow.x+0.5*trackingSize.x;
+  meanPoint.y = trackingWindow.y+0.5*trackingSize.y;
+
+  Rect objectWindow(objectPosition.x-0.5*objectSize.x, objectPosition.y-0.5*objectSize.y, objectSize.x, objectSize.y);
+  
+  /*
+  Mat testFrame = frame.clone();
+  Mat testBP = bp.clone();
+  rectangle(testFrame, trackingWindow, Scalar(0,0,255), 2);
+  //circle(testFrame, objectPosition, 2, Scalar(0,0,255), 2);
+  circle(testFrame, meanPoint, 2, Scalar(0,255,0), 2);
+  rectangle(testBP, trackingWindow, Scalar(0,0,255), 2);
+  //circle(testFrame, objectPosition, 2, Scalar(0,0,255), 2);
+  circle(testBP, meanPoint, 2, Scalar(0,255,0), 2);
+  imshow("frame",testFrame);
+  imshow("bp",testBP);
+  imwrite("frame.png",testFrame);
+  imwrite("bp.png",testBP);
+  */
+
+  }
+
+void Meanshift::updateMeanshift(Mat frame){
+ 
+  Point objectSize(30, 30);
+  const int channels[] = { 0, 1 };
+  float range[] = { 0, 256 };
+  const float *ranges[] = { range, range };
+  const int histSize[] = { 64, 64 };
+
+  // Create histogram for object region
+  Mat objectROI = frame(Rect(Point(objectPosition.x-0.5*objectSize.x,objectPosition.y-0.5*objectSize.y), Size(objectSize.x, objectSize.y)));
+  
+  //imshow("objectROI",objectROI);
+
+  calcHist(&objectROI, 1, channels, noArray(), objectHistogram, 2, histSize, ranges, true, false);
+  // Global color distribution with cumulative histogram
+  calcHist(&frame, 1, channels, noArray(), globalHistogram, 2, histSize, ranges, true, true);
+  // Boosting: Divide conditional probabilities in object area by a priori probabilities of colors
+  for (int y = 0; y < objectHistogram.rows; y++) {
+    for (int x = 0; x < objectHistogram.cols; x++) {
+      objectHistogram.at<float>(y, x) /= globalHistogram.at<float>(y, x);
+    }
+  }
+  normalize(objectHistogram, objectHistogram, 0, 255, NORM_MINMAX);  
+}
+
+
+
+
+
+

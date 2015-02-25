@@ -1,0 +1,43 @@
+#ifndef DISPARITY_H
+#define DISPARITY_H
+#include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/contrib/contrib.hpp"
+
+using namespace cv;
+
+class Disparity {
+public:
+	Mat dispLR, dispRL;
+	Mat combinedDisps=Mat::zeros(660,1280, CV_8UC1);
+    Mat temporalCombinedDisps=Mat::zeros(660,1280, CV_8UC1);
+    Mat obstacleImage=Mat::zeros(660,1280, CV_8UC1);
+    Mat postDarkImage=Mat::zeros(660,1280, CV_8UC1);
+    StereoSGBM sgbm;
+
+	Disparity();
+	void disparityImages(Mat imgL, Mat imgR);
+	void combinedRLLRDisparity(bool first);
+	void temporalDisparity();
+	void vDispThresholdedImage(float slope, float intersection, float thresholdOffset);
+	void removeDarkRegions(Mat orgImgLoi, Mat modifiedDispImage);
+
+	void reduceNumberOfBins(Mat dispImg);
+	void generateVdisp(Mat dispImg);
+	void generateUdisp(Mat dispImg);
+	void generateVdispPlanes(Mat dispImg);
+	void generateUdispPlanes(Mat dispImg);
+	Mat Vdisp = Mat::zeros(660, 255, CV_8UC1);
+	Mat Udisp = Mat::zeros(255, 1280, CV_8UC1);
+	Mat reducedImg = Mat::zeros(660,1280, CV_8UC1);
+	Mat VdispPlanes = Mat::zeros(660,1280, CV_8UC1);
+	Mat UdispPlanes = Mat::zeros(660,1280, CV_8UC1);
+private:
+	Mat temporalDisp;
+	Vec3b pixelValueBGR;
+    int pixelValueBlue;
+    int pixelValueGreen;
+    int pixelValueRed;
+};
+#endif

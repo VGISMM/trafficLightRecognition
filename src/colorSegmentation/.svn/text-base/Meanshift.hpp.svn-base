@@ -1,0 +1,26 @@
+
+
+/*--------- INCLUDES------------*/
+#include <stdio.h>
+#include <iostream>
+#include <time.h>
+#include <opencv2/opencv.hpp>
+
+using namespace cv;
+using namespace std;
+
+class Meanshift {
+public:
+  Meanshift();
+  Point meanPoint;
+  Point objectPosition;
+  Point objectSize;
+  void predictMeanshift(Mat frame);
+  void updateMeanshift(Mat frame);
+
+private:
+  Mat bp;
+  Mat objectHistogram;
+  Mat globalHistogram;
+  Rect trackingWindow;
+};
