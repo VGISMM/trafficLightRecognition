@@ -1,1 +1,0 @@
-/Users/markpp/Desktop/mark/trafficLightRecognition/CMakeFiles/main.dir
