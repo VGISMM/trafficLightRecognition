@@ -1,1 +1,0 @@
-/Users/Morten/Documents/GitHub/trafficLightRecognition/CMakeFiles/main.dir
