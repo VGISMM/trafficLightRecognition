@@ -8,6 +8,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "disparity/disparity.h"
+#include "blobAnalysis/blobAnalysis.h"
 #include "colorSegmentation/backproject.h"
 
 using namespace std;
@@ -16,6 +17,7 @@ cv::VideoWriter output;
 
 int main(int argc, char **argv) {
   Disparity Disparity;
+  BlobAnalysis BlobAnalysis;
   Backproject Backproject;
   cv::VideoCapture capture(argv[1]);
   //output.open( "dispTest.avi", CV_FOURCC('M','J','P','G'), 16, cv::Size (imageWidth*2,imageHeight), true );
@@ -35,10 +37,9 @@ int main(int argc, char **argv) {
     }
     imgLOI = img(cv::Rect(cv::Point(0,imageHeightOffset), cv::Size(imageWidth, imageHeight)));
     imgROI = img(cv::Rect(cv::Point(imageWidth,imageHeightOffset), cv::Size(imageWidth, imageHeight)));
-   	imshow("imgLOI",imgLOI);
+   	
 
-
- // color space tests
+    // color space tests
     cv::Mat channelYCrCb[3];
     cv::Mat channelLuv[3];
     vector<cv::Mat> channels;
@@ -51,20 +52,20 @@ int main(int argc, char **argv) {
     channels.push_back(channelLuv[1]);
     channels.push_back(channelLuv[2]);
 
-    merge(channels,dstCbUV); 
-    /*imwrite("out/dstYCrCb.png", dstYCrCb);
-    
-    
-    imwrite("out/dstYCrCb_Y.png", channelYCrCb[0]);
-    imwrite("out/dstYCrCb_Cr.png", channelYCrCb[1]);
-    imwrite("out/dstYCrCb_Cb.png", channelYCrCb[2]); 
-*/
-    //cvtColor(imgLOI, dstLUV, CV_BGR2Luv);
+    merge(channels,dstCbUV); // combined
+    //cvtColor(imgLOI, dstLUV, CV_BGR2Luv); // simple
     
     Backproject.backproject(dstCbUV);
+    BlobAnalysis.blobRects.clear();
+    BlobAnalysis.extractBlobs(Backproject.greenBP);
+    BlobAnalysis.extractBlobs(Backproject.redBP);
 
+    // test code for blobanalysis
+    for( int i = 0; i< BlobAnalysis.blobRects.size(); i++ ){
 
-
+		rectangle(imgLOI, BlobAnalysis.blobRects[i], cv::Scalar( 0, 55, 255 ), 2, 4 );
+    }
+	imshow("imgLOI",imgLOI);
 
     /* //gpu tests
     cv::cvtColor(imgLOI, imgLGray, cv::COLOR_BGR2GRAY);
@@ -96,7 +97,7 @@ int main(int argc, char **argv) {
     //imshow("combinedOutput",combinedOutput);
 	*/
 
-    imwrite("imgLOI.png", imgLOI); 
+    //imwrite("imgLOI.png", imgLOI); 
     cv::waitKey();
     int k = cv::waitKey(10);
     if (k=='q') {

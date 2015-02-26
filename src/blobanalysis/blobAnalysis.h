@@ -2,31 +2,19 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/contrib/contrib.hpp"
-
+#include <iostream>
+#include <vector_types.h>
+#include <string>
+#include <stdio.h>
 //using namespace cv;
-
+using namespace std;
 
 class BlobAnalysis {
 public:
 	BlobAnalysis();
-	cv::vector<cv::Rect> extractBlobs(cv::Mat);
-	
-private:
+	void extractBlobs(cv::Mat);
 	cv::vector<cv::Rect> blobRects;
-	cv::vector<cv::Rect> blobRectFound;
-
-	cv::vector<cv::Point> blobCenterCurrent;
-	cv::vector<cv::Point> blobCenterPrevious;
-	cv::vector<cv::Point> blobCenterFound;
-	float getDistance(cv::Point p1,cv::Point p2);
-	int closestCenterPoint;
-	float myDistance;
-
-	int minBlobSize; 
-	int maxBlobSize;
+private:
+	float minBlobSize, maxBlobSize; 
 	cv::Mat frame;
-	cv::Mat thresFrame;
-	int threshold_value;
-	int max_BINARY_value;
-	int maxRadius;
 };
