@@ -11,6 +11,7 @@ include_directories(${CUDA_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 cuda_add_executable(main 
             src/main.cpp
             src/disparity/disparity.cpp
+            src/blobAnalysis/blobAnalysis.cpp
             src/colorSegmentation/backproject.cpp
             src/kernels/mykernel.cu)
 target_link_libraries(main ${CUDA_LIBRARIES} ${OpenCV_LIBS})

@@ -74,7 +74,7 @@ void Backproject::backproject(cv::Mat frame){
   float range[] = { 0, 256 };
   const float *ranges[] = { range, range };
 
-  imshow("frame",frame);
+  //imshow("frame",frame);
   calcBackProject(&frame, 1, channels, greenHistogram, greenBP, ranges);
   calcBackProject(&frame, 1, channels, redHistogram, redBP, ranges);
   threshold( greenBP, greenBP, 40, 255, 0 );
@@ -89,5 +89,5 @@ void Backproject::backproject(cv::Mat frame){
   BPchannels.push_back(redBP);
 
   merge(BPchannels,outBP);
-  imshow("BPchannels",outBP);
+  //imshow("BPchannels",outBP);
 }
