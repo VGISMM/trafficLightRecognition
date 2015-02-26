@@ -10,6 +10,7 @@
 #include "disparity/disparity.h"
 #include "blobAnalysis/blobAnalysis.h"
 #include "colorSegmentation/backproject.h"
+#include "colorSegmentation/emGMM.h"
 
 using namespace std;
 
@@ -19,12 +20,14 @@ int main(int argc, char **argv) {
   Disparity Disparity;
   BlobAnalysis BlobAnalysis;
   Backproject Backproject;
+  emGMM emGMM;
   cv::VideoCapture capture(argv[1]);
   //output.open( "dispTest.avi", CV_FOURCC('M','J','P','G'), 16, cv::Size (imageWidth*2,imageHeight), true );
 
   cv::Mat img, imgLOI, imgROI, imgLGray, imgRGray, dispOutRLLR, dispOutFinished, dstYCrCb, dstLUV, dstCbUV;
   
-  Backproject.init();
+  //Backproject.init();
+  emGMM.init();
   while(1) {
     /** Get left and right stereo image pair **/
     capture >> img;
@@ -40,7 +43,7 @@ int main(int argc, char **argv) {
    	
 
     // color space tests
-    cv::Mat channelYCrCb[3];
+    /*cv::Mat channelYCrCb[3];
     cv::Mat channelLuv[3];
     vector<cv::Mat> channels;
     cvtColor(imgLOI, dstYCrCb, CV_BGR2YCrCb); //YCrCb JPEG (or YCC)
@@ -56,16 +59,22 @@ int main(int argc, char **argv) {
     //cvtColor(imgLOI, dstLUV, CV_BGR2Luv); // simple
     
     Backproject.backproject(dstCbUV);
+    */
+
+    emGMM.predictFrame(imgLOI);
+
     BlobAnalysis.blobRects.clear();
-    BlobAnalysis.extractBlobs(Backproject.greenBP);
-    BlobAnalysis.extractBlobs(Backproject.redBP);
+    BlobAnalysis.extractBlobs(emGMM.EmGmmAll);
+
+    //BlobAnalysis.extractBlobs(Backproject.greenBP);
+    //BlobAnalysis.extractBlobs(Backproject.redBP);
 
     // test code for blobanalysis
     for( int i = 0; i< BlobAnalysis.blobRects.size(); i++ ){
 
 		rectangle(imgLOI, BlobAnalysis.blobRects[i], cv::Scalar( 0, 55, 255 ), 2, 4 );
     }
-	imshow("imgLOI",imgLOI);
+	  imshow("imgLOI",imgLOI);
 
     /* //gpu tests
     cv::cvtColor(imgLOI, imgLGray, cv::COLOR_BGR2GRAY);

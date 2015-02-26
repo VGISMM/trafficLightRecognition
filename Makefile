@@ -34,19 +34,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /usr/local/Cellar/cmake/3.1.0/bin/cmake
+CMAKE_COMMAND = /usr/local/Cellar/cmake/3.1.2/bin/cmake
 
 # The command to remove a file.
-RM = /usr/local/Cellar/cmake/3.1.0/bin/cmake -E remove -f
+RM = /usr/local/Cellar/cmake/3.1.2/bin/cmake -E remove -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/markpp/Desktop/mark/trafficLightRecognition
+CMAKE_SOURCE_DIR = /Users/Morten/Documents/GitHub/trafficLightRecognition
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/markpp/Desktop/mark/trafficLightRecognition
+CMAKE_BINARY_DIR = /Users/Morten/Documents/GitHub/trafficLightRecognition
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /Users/markpp/Desktop/mark/trafficLightRecognition
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/usr/local/Cellar/cmake/3.1.0/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/usr/local/Cellar/cmake/3.1.2/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -64,7 +64,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/local/Cellar/cmake/3.1.0/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/usr/local/Cellar/cmake/3.1.2/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -73,9 +73,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/markpp/Desktop/mark/trafficLightRecognition/CMakeFiles /Users/markpp/Desktop/mark/trafficLightRecognition/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Morten/Documents/GitHub/trafficLightRecognition/CMakeFiles /Users/Morten/Documents/GitHub/trafficLightRecognition/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/markpp/Desktop/mark/trafficLightRecognition/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Morten/Documents/GitHub/trafficLightRecognition/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -163,6 +163,30 @@ src/colorSegmentation/backproject.cpp.s:
 	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/colorSegmentation/backproject.cpp.s
 .PHONY : src/colorSegmentation/backproject.cpp.s
 
+src/colorSegmentation/emGMM.o: src/colorSegmentation/emGMM.cpp.o
+.PHONY : src/colorSegmentation/emGMM.o
+
+# target to build an object file
+src/colorSegmentation/emGMM.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/colorSegmentation/emGMM.cpp.o
+.PHONY : src/colorSegmentation/emGMM.cpp.o
+
+src/colorSegmentation/emGMM.i: src/colorSegmentation/emGMM.cpp.i
+.PHONY : src/colorSegmentation/emGMM.i
+
+# target to preprocess a source file
+src/colorSegmentation/emGMM.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/colorSegmentation/emGMM.cpp.i
+.PHONY : src/colorSegmentation/emGMM.cpp.i
+
+src/colorSegmentation/emGMM.s: src/colorSegmentation/emGMM.cpp.s
+.PHONY : src/colorSegmentation/emGMM.s
+
+# target to generate assembly for a file
+src/colorSegmentation/emGMM.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/colorSegmentation/emGMM.cpp.s
+.PHONY : src/colorSegmentation/emGMM.cpp.s
+
 src/disparity/disparity.o: src/disparity/disparity.cpp.o
 .PHONY : src/disparity/disparity.o
 
@@ -226,6 +250,9 @@ help:
 	@echo "... src/colorSegmentation/backproject.o"
 	@echo "... src/colorSegmentation/backproject.i"
 	@echo "... src/colorSegmentation/backproject.s"
+	@echo "... src/colorSegmentation/emGMM.o"
+	@echo "... src/colorSegmentation/emGMM.i"
+	@echo "... src/colorSegmentation/emGMM.s"
 	@echo "... src/disparity/disparity.o"
 	@echo "... src/disparity/disparity.i"
 	@echo "... src/disparity/disparity.s"
