@@ -13,6 +13,7 @@ cuda_add_executable(main
             src/disparity/disparity.cpp
             src/blobAnalysis/blobAnalysis.cpp
             src/colorSegmentation/backproject.cpp
+            src/colorSegmentation/emGMM.cpp
             src/kernels/mykernel.cu)
 target_link_libraries(main ${CUDA_LIBRARIES} ${OpenCV_LIBS})
 
