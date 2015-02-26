@@ -20,7 +20,5 @@ Light state classification:
 
 Tested on OSX, build using cmake 3.10. Compile instructions follows:
 cmake .
-
 make
-
 ./main <path to video clip>
