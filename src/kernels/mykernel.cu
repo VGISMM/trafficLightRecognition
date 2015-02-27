@@ -1,11 +1,8 @@
-#include <math.h>
-#include <stdio.h>
-#include <algorithm>
-#include <opencv2/opencv.hpp>
+
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include "mykernel.h"
 
-using namespace std;
 __global__
 void rgba_to_greyscale(unsigned char* const image,
                        unsigned int* vdispImage,
@@ -40,3 +37,4 @@ void your_rgba_to_greyscale(unsigned char* const d_image,
   rgba_to_greyscale<<<gridSize, blockSize>>>(d_image, d_vdispImage, numRows, numCols, vdispNumRows, vdispNumCols);
   cudaDeviceSynchronize();
 }
+

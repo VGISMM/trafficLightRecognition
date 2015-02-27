@@ -11,26 +11,26 @@ Disparity::Disparity()
 void Disparity::disparityImages() 
 { 
 	// LR BM
-    auto bmstart = chrono::steady_clock::now();
+  auto bmstart = chrono::steady_clock::now();
 	gpubm->operator()(imgLOIGPU, imgROIGPU, dispLRGPU);
-    auto bmend = chrono::steady_clock::now();
-    // Store the time difference between start and end
-    auto bmdiff = bmend - bmstart;
-    std::cout << "Stereo coorespondence: " << chrono::duration <double, milli> (bmdiff).count() << " ms" << endl;
-	cv::gpu::normalize(dispLRGPU, dispLRGPU, 0, 255, CV_MINMAX, CV_8U);
+  auto bmend = chrono::steady_clock::now();
+  // Store the time difference between start and end
+  auto bmdiff = bmend - bmstart;
+  std::cout << "Stereo coorespondence: " << chrono::duration <double, milli> (bmdiff).count() << " ms" << endl;
+	//cv::gpu::normalize(dispLRGPU, dispLRGPU, 0, 255, CV_MINMAX, CV_8U);
 
 	// RL BM
 	cv::gpu::flip(imgLOIGPU,imgLOIGPUflip,1);
 	cv::gpu::flip(imgROIGPU,imgROIGPUflip,1);
 	gpubm->operator()(imgROIGPUflip, imgLOIGPUflip, dispRLGPUflip);
-	cv::gpu::normalize(dispRLGPUflip, dispRLGPUflip, 0, 255, CV_MINMAX, CV_8U);
+	//cv::gpu::normalize(dispRLGPUflip, dispRLGPUflip, 0, 255, CV_MINMAX, CV_8U);
 	cv::gpu::flip(dispRLGPUflip,dispRLGPU,1);
 
-    // RLLR consistency check
-    cv::gpu::min(dispLRGPU,dispRLGPU,dispRLLRGPU);
-    dbf->operator()(dispRLLRGPU, imgLOIGPU, dispFinished);
+  // RLLR consistency check
+  cv::gpu::min(dispLRGPU,dispRLGPU,dispRLLRGPU);
 
-    
+  // bilateral filtering
+  dbf->operator()(dispRLLRGPU, imgLOIGPU, dispFinished);    
 }
 
 void Disparity::temporalDisparity() 
@@ -98,53 +98,7 @@ void Disparity::reduceNumberOfBins(cv::Mat dispImg)
     }
     //return reducedImg;
 }
-*/
-void Disparity::generateVdispAlt() 
-{
-  unsigned char *inputImage; //host
-  unsigned char *d_image;
-  unsigned int *d_vdispImage; // device
 
-  //cudaFree(0);
-
-   //This shouldn't ever happen given the way the images are created
-  //at least based upon my limited understanding of OpenCV, but better to check
-  if (!dispFinished.isContinuous()) {
-    std::cerr << "Images aren't continuous!! Exiting." << std::endl;
-    exit(1);
-  }
-  //unsigned char* data = dispRLGPU.ptr<unsigned char>();
-
-  const size_t imgNumPixels = imageHeight * imageWidth;
-  const size_t vdispNumPixels = imageHeight * 255;
-  //allocate memory on the device for both input and output cudaMalloc((void **)&d_a, size);
-  cudaMalloc((void **) &d_image, sizeof(unsigned char) * imgNumPixels);
-  cudaMalloc((void **) &d_vdispImage, sizeof(unsigned int) * vdispNumPixels);
-  
-  cudaMemset(d_vdispImage, 0, sizeof(unsigned int) * vdispNumPixels); //make sure no memory is left laying around
-  //copy input array to the GPU
-  cudaMemcpy(d_image, dispFinished.ptr<unsigned char>(0), sizeof(unsigned char) * imgNumPixels, cudaMemcpyHostToDevice);
-  //d_rgbaImage__ = *d_image;
-  //d_greyImage__ = *d_greyImage;
-  auto start = chrono::steady_clock::now();
-  //call the grayscale code
-  your_rgba_to_greyscale(d_image, d_vdispImage, imageHeight, imageWidth, imageHeight, 255 );
-
- // cudaDeviceSynchronize(); 
-  auto end = chrono::steady_clock::now();
-  // Store the time difference between start and end
-  auto diff = end - start;
-
-  //copy the output back to the host
-  cudaMemcpy(vdisp.ptr<unsigned int>(0), d_vdispImage, sizeof(unsigned int) * vdispNumPixels, cudaMemcpyDeviceToHost);
-
-  //output the image
-  cv::imwrite("testGPU.png", vdisp);
-  cout << "GPU time: " << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-  //cleanup
-  cudaFree(d_image);
-  cudaFree(d_vdispImage);
-}
 
 void Disparity::generateVdisp(cv::Mat h_disp) 
 {
@@ -162,8 +116,8 @@ void Disparity::generateVdisp(cv::Mat h_disp)
   }
   //unsigned char* data = dispRLGPU.ptr<unsigned char>();
 
-  const size_t imgNumPixels = imageHeight * imageWidth;
-  const size_t vdispNumPixels = imageHeight * 255;
+  const size_t imgNumPixels = IMAGEHEIGHT * IMAGEWIDTH;
+  const size_t vdispNumPixels = IMAGEHEIGHT * 255;
   //allocate memory on the device for both input and output cudaMalloc((void **)&d_a, size);
   cudaMalloc((void **) &d_image, sizeof(unsigned char) * imgNumPixels);
   cudaMalloc((void **) &d_vdispImage, sizeof(unsigned int) * vdispNumPixels);
@@ -175,7 +129,7 @@ void Disparity::generateVdisp(cv::Mat h_disp)
   //d_greyImage__ = *d_greyImage;
   auto start = chrono::steady_clock::now();
   //call the grayscale code
-  your_rgba_to_greyscale(d_image, d_vdispImage, imageHeight, imageWidth, imageHeight, 255 );
+  your_rgba_to_greyscale(d_image, d_vdispImage, IMAGEHEIGHT, IMAGEWIDTH, IMAGEHEIGHT, 255 );
 
  // cudaDeviceSynchronize(); 
   auto end = chrono::steady_clock::now();
@@ -193,7 +147,7 @@ void Disparity::generateVdisp(cv::Mat h_disp)
   cudaFree(d_image);
   cudaFree(d_vdispImage);
 }
-
+*/
 void Disparity::generateUdisp(cv::Mat dispImg) 
 {
     Udisp.setTo(cv::Scalar(0));

@@ -3,7 +3,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/contrib/contrib.hpp"
 #include <iostream>
-#include <vector_types.h>
 #include <string>
 #include <stdio.h>
 //using namespace cv;
@@ -12,8 +11,9 @@ using namespace std;
 class BlobAnalysis {
 public:
 	BlobAnalysis();
-	void extractBlobs(cv::Mat);
+	void extractBlobs(cv::Mat, cv::Mat);
 	cv::vector<cv::Rect> blobRects;
+	cv::vector<cv::Rect> biggerBlobRects;
 private:
 	float minBlobSize, maxBlobSize; 
 	cv::Mat frame;
