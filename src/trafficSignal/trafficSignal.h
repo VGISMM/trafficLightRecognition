@@ -16,11 +16,12 @@ using namespace std;
 class TrafficSignal {
 public:
 	TrafficSignal();
-	cv::Point3f trafficSignalPosition;
+	cv::Point3f trafficSignalPosition, trafficSignalPosition2D, trafficSignalPlanePoint, trafficSignalPlanePoint2D;
 
 	cv::vector<cv::Point3f> image2Dpositions;
 	cv::vector<cv::Point3f> world3Dpositions;
 	cv::vector<cv::Point3f> widthHeightDepth;
+	float heightAboveRoad;
 	//cv::vector<cv::Point3f> directionVectors;
 	cv::Point3f vehicleKalman2DPoint;
 	cv::Point3f vehicleKalman3DPoint;
@@ -34,9 +35,9 @@ public:
 	int lifeTime = 0;
 	
 	bool detectedBefore = false;
-	void calcAvgDist();
+	void findTrafficSignalsImageCoordiantes();
 
 private:
-	
+	cv::Point3f projectFrom3Dto2D(cv::Point3f world3Dcoordinate);
 };
  #endif

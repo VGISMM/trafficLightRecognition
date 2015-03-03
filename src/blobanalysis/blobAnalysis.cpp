@@ -1,8 +1,4 @@
 #include "blobAnalysis.h"
-
-/************************************
- * Function for initializing values *
- ************************************/
 BlobAnalysis::BlobAnalysis	() {
 	minBlobSize=10; 
 	maxBlobSize=100;
@@ -28,20 +24,18 @@ void BlobAnalysis::extractBlobs(cv::Mat frame, cv::Mat dstCbUV){
     //Canny(dstCbUV, detected_edges, 190, 255, 3);
     //cv::Mat test = cv::Mat::zeros(460+2,1280+2,CV_8UC1);
     //detected_edges.copyTo(test(cv::Rect(0,0,1280,460)));
-	cv::Rect tempRect, rect;
+	cv::Rect tempRect; //, rect;
 	
 	for( int i = 0; i< contours.size(); i++ )
 	{	
 		tempRect = boundingRect(contours[i]);
-		//floodFill(clone, cv::Point(tempRect.x+tempRect.width/2,tempRect.y+tempRect.height/2), cvScalar(255,0,0), & rect, cvScalarAll(53.5), cvScalarAll(23.5), cv::FLOODFILL_MASK_ONLY);
-		floodFill(clone, cv::Point(tempRect.x+tempRect.width/2,tempRect.y+tempRect.height/2), cvScalar(255,0,0), & rect, cvScalarAll(50), cvScalarAll(10), cv::FLOODFILL_FIXED_RANGE);
-		// Find the area of contour
-		if (rect.width > 3 && rect.width < 30 && rect.height > 3 && rect.height < 30)
-		{
-			blobRects.push_back(rect); 
-		}
 		
-		//cv::waitKey();
+		//floodFill(clone, cv::Point(tempRect.x+tempRect.width/2,tempRect.y+tempRect.height/2), cvScalar(255,0,0), & rect, cvScalarAll(50), cvScalarAll(10), cv::FLOODFILL_FIXED_RANGE);
+		// Find the area of contour
+		if (tempRect.width > 3 && tempRect.width < 30 && tempRect.height > 3 && tempRect.height < 30)
+		{
+			blobRects.push_back(tempRect); 
+		}
     }
 
     bool intersect = false;
@@ -49,12 +43,12 @@ void BlobAnalysis::extractBlobs(cv::Mat frame, cv::Mat dstCbUV){
     // check for intersecting rects
     for( int i = 0; i< blobRects.size(); i++ )
 	{	
-		cv::Rect r1 = cv::Rect(blobRects[i].x, blobRects[i].y, blobRects[i].width+40, blobRects[i].height+40);
+		cv::Rect r1 = cv::Rect(blobRects[i].x+BOXSIZE/2, blobRects[i].y+BOXSIZE/2, blobRects[i].width+BOXSIZE, blobRects[i].height+BOXSIZE);
 		for( int j = 0; j< blobRects.size(); j++ )
 		{
 			if (i != j)
 			{	
-				cv::Rect r2 = cv::Rect(blobRects[j].x, blobRects[j].y, blobRects[j].width+40, blobRects[j].height+40);
+				cv::Rect r2 = cv::Rect(blobRects[j].x+BOXSIZE/2, blobRects[j].y+BOXSIZE/2, blobRects[j].width+BOXSIZE, blobRects[j].height+BOXSIZE);
 				
 				cv::Rect intersectRect = r1 & r2; // 
 				if (intersectRect == cv::Rect())

@@ -4,15 +4,32 @@ Disparity::Disparity()
 	dbf = new cv::gpu::DisparityBilateralFilter();   
 	gpubm = new cv::gpu::StereoBM_GPU();
 	gpubm->preset = cv::gpu::StereoBM_GPU::BASIC_PRESET;
-	gpubm->ndisp = 64;
-	gpubm->winSize = 11;
+	gpubm->ndisp = 96;
+	gpubm->winSize = 9;
+  gpubm->avergeTexThreshold = 2;
+
+  sgbm.preFilterCap = 1;
+  sgbm.SADWindowSize = 9;
+  sgbm.P1 = 8*3*sgbm.SADWindowSize*sgbm.SADWindowSize;
+  sgbm.P2 = 32*3*sgbm.SADWindowSize*sgbm.SADWindowSize;
+  sgbm.minDisparity = 0;
+  sgbm.numberOfDisparities = 96;
+  //sgbm.uniquenessRatio = 10;
+  sgbm.speckleWindowSize = 2;
+  sgbm.speckleRange = 3;
+  //sgbm.disp12MaxDiff = 1;
+  //sgbm.fullDP = 1;
 }
 
-void Disparity::disparityImages() 
+void Disparity::GPUBMdisparity() 
 { 
+  cv::gpu::GpuMat grayLOIGPU, grayROIGPU;
+  cv::gpu::cvtColor(imgLOIGPU, grayLOIGPU, cv::COLOR_BGR2GRAY);
+  cv::gpu::cvtColor(imgROIGPU, grayROIGPU, cv::COLOR_BGR2GRAY);
 	// LR BM
+  cv::gpu::GpuMat dispLRGPU, dispRLGPU;
   auto bmstart = chrono::steady_clock::now();
-	gpubm->operator()(imgLOIGPU, imgROIGPU, dispLRGPU);
+	gpubm->operator()(grayLOIGPU, grayROIGPU, dispLRGPU);
   auto bmend = chrono::steady_clock::now();
   // Store the time difference between start and end
   auto bmdiff = bmend - bmstart;
@@ -20,17 +37,31 @@ void Disparity::disparityImages()
 	//cv::gpu::normalize(dispLRGPU, dispLRGPU, 0, 255, CV_MINMAX, CV_8U);
 
 	// RL BM
-	cv::gpu::flip(imgLOIGPU,imgLOIGPUflip,1);
-	cv::gpu::flip(imgROIGPU,imgROIGPUflip,1);
+  cv::gpu::GpuMat imgLOIGPUflip, imgROIGPUflip, dispRLGPUflip;
+	cv::gpu::flip(grayLOIGPU,imgLOIGPUflip,1);
+	cv::gpu::flip(grayROIGPU,imgROIGPUflip,1);
 	gpubm->operator()(imgROIGPUflip, imgLOIGPUflip, dispRLGPUflip);
 	//cv::gpu::normalize(dispRLGPUflip, dispRLGPUflip, 0, 255, CV_MINMAX, CV_8U);
 	cv::gpu::flip(dispRLGPUflip,dispRLGPU,1);
 
+  //cv::gpu::GpuMat dispRLLRGPU;
   // RLLR consistency check
-  cv::gpu::min(dispLRGPU,dispRLGPU,dispRLLRGPU);
+  cv::gpu::min(dispLRGPU,dispRLGPU,dispFinished); //dispRLLRGPU);
 
   // bilateral filtering
-  dbf->operator()(dispRLLRGPU, imgLOIGPU, dispFinished);    
+  //dbf->operator()(dispRLLRGPU, imgLOIGPU, dispFinished);    
+}
+
+void Disparity::SGBMdisparity() 
+{ 
+  sgbm(imgL, imgR, dispLR);
+  dispLR.convertTo(dispLR, CV_8U, 255/(sgbm.numberOfDisparities*16.));
+  flip(imgL, imgL, 1);
+  flip(imgR, imgR, 1);
+  sgbm(imgR, imgL, dispRL);
+  dispRL.convertTo(dispRL, CV_8U, 255/(sgbm.numberOfDisparities*16.));
+  flip(dispRL, dispRL, 1);
+  cv::min(dispLR,dispRL,dispRLLR);
 }
 
 void Disparity::temporalDisparity() 
@@ -47,17 +78,17 @@ void Disparity::temporalDisparity()
     }
 }
 
-void Disparity::vDispThresholdedImage(float slope, float intersection, float thresholdOffset) 
+void Disparity::vDispThresholdedImage(cv::Mat dispImg, float slope, float intersection, float thresholdOffset) 
 {
 // Create V disparity thresholded obstacleImage 
     obstacleImage.setTo(cv::Scalar(0));
-    for (int j = 0; j < postDarkImage.cols; j++ ) {
-        for (int i = 0; i < postDarkImage.rows; i++) {
-            if (postDarkImage.at<uchar>(i, j) > (((i-(intersection))/(slope))+thresholdOffset))
+    for (int j = 0; j < dispImg.cols; j++ ) {
+        for (int i = 0; i < dispImg.rows; i++) {
+            if (dispImg.at<uchar>(i, j) > (((i-(intersection))/(slope))+thresholdOffset))
             {  
-                obstacleImage.at<uchar>(i, j) = postDarkImage.at<uchar>(i, j);
+                obstacleImage.at<uchar>(i, j) = dispImg.at<uchar>(i, j);
             } 
-            if (postDarkImage.at<uchar>(i, j) > 220)
+            if (dispImg.at<uchar>(i, j) > 220)
             {
                 obstacleImage.at<uchar>(i, j) = 0;
             }
@@ -84,21 +115,6 @@ void Disparity::removeDarkRegions(cv::Mat orgImgLoi)
         }
     }
 }
-/*
-void Disparity::reduceNumberOfBins(cv::Mat dispImg) 
-{   
-    reducedImg.setTo(cv::Scalar(0));
-    //cv::Mat reducedImg = cv::Mat::zeros(dispImg.rows, dispImg.cols, CV_8UC1);
-    for (int j = 0; j < dispImg.cols; j++ ) 
-    {
-        for (int i = 0; i < dispImg.rows; i++) 
-        {
-            reducedImg.at<uchar>(i, j) = dispImg.at<uchar>(i, j)/8;
-        }
-    }
-    //return reducedImg;
-}
-
 
 void Disparity::generateVdisp(cv::Mat h_disp) 
 {
@@ -129,7 +145,7 @@ void Disparity::generateVdisp(cv::Mat h_disp)
   //d_greyImage__ = *d_greyImage;
   auto start = chrono::steady_clock::now();
   //call the grayscale code
-  your_rgba_to_greyscale(d_image, d_vdispImage, IMAGEHEIGHT, IMAGEWIDTH, IMAGEHEIGHT, 255 );
+  gpuGenerateVdisp(d_image, d_vdispImage, IMAGEHEIGHT, IMAGEWIDTH, IMAGEHEIGHT, 255 );
 
  // cudaDeviceSynchronize(); 
   auto end = chrono::steady_clock::now();
@@ -137,7 +153,7 @@ void Disparity::generateVdisp(cv::Mat h_disp)
   auto diff = end - start;
 
   //copy the output back to the host
-  cudaMemcpy(vdispU16.ptr<unsigned int>(0), d_vdispImage, sizeof(unsigned int) * vdispNumPixels, cudaMemcpyDeviceToHost);
+  cudaMemcpy(vdispU16.ptr<unsigned int>(0), d_vdispImage, sizeof(unsigned char) * 2 * vdispNumPixels, cudaMemcpyDeviceToHost);
 
   vdispU16.convertTo(vdisp, CV_8UC1);
   
@@ -147,71 +163,23 @@ void Disparity::generateVdisp(cv::Mat h_disp)
   cudaFree(d_image);
   cudaFree(d_vdispImage);
 }
-*/
-void Disparity::generateUdisp(cv::Mat dispImg) 
+
+void Disparity::generateVdispCPU(cv::Mat dispImg) 
 {
-    Udisp.setTo(cv::Scalar(0));
-    //cv::Mat Udisp = cv::Mat::zeros(255, dispImg.cols, CV_8UC1);
+    //cv::Mat Vdisp = cv::Mat::zeros(dispImg.rows, 255, CV_8UC1);
+    vdispCPU.setTo(cv::Scalar(0));
     for (int j = 0; j < dispImg.cols; j++ ) 
     {
         for (int i = 0; i < dispImg.rows; i++) 
         {
-            if(dispImg.at<uchar>(i, j) > 10 && dispImg.at<uchar>(i, j) < 235)
+            if(dispImg.at<uchar>(i, j) > 0 && dispImg.at<uchar>(i, j) < 225)
             {
-                if(Udisp.at<uchar>(dispImg.at<uchar>(i, j), j) < 255 ){
-                    Udisp.at<uchar>(dispImg.at<uchar>(i, j), j)++;
+                if(vdispCPU.at<uchar>(i, dispImg.at<uchar>(i, j)) < 255 ){
+                    vdispCPU.at<uchar>(i, dispImg.at<uchar>(i, j))++;
                 }
             } 
         }
     }
+    //return Vdisp;
 }
-
-/*
-void Disparity::generateVdispPlanes(cv::Mat dispImg) 
-{   
-    VdispPlanes.setTo(cv::Scalar(0));
-    //cv::Mat VdispPlanes = cv::Mat::zeros(dispImg.rows, dispImg.cols, CV_8UC1);
-    for (int VdispRow = 0; VdispRow < Vdisp.rows; VdispRow++) 
-    {
-        for (int VdispCol = 0; VdispCol < Vdisp.cols; VdispCol++ ) 
-        {
-            if(Vdisp.at<uchar>(VdispRow, VdispCol) > (4*((VdispCol+1)/2)))
-            //if(Vdisp.at<uchar>(VdispRow-1, VdispCol) + Vdisp.at<uchar>(VdispRow, VdispCol) + Vdisp.at<uchar>(VdispRow+1, VdispCol) > 60)
-            {
-                for (int dispImgCol = 0; dispImgCol < dispImg.cols; dispImgCol++ ) 
-                {
-                    if(dispImg.at<uchar>(VdispRow, dispImgCol) == VdispCol)
-                    {
-                        VdispPlanes.at<uchar>(VdispRow, dispImgCol) = VdispCol;
-                    }
-                }
-            } 
-        }
-    }
-    //return VdispPlanes;
-}
-
-void Disparity::generateUdispPlanes(cv::Mat dispImg) 
-{
-    UdispPlanes.setTo(cv::Scalar(0));
-    //cv::Mat UdispPlanes = cv::Mat::zeros(dispImg.rows, dispImg.cols, CV_8UC1);
-    for (int UdispRow = 0; UdispRow < Udisp.rows; UdispRow++) 
-    {
-        for (int UdispCol = 0; UdispCol < Udisp.cols; UdispCol++ ) 
-        {
-            if(Udisp.at<uchar>(UdispRow, UdispCol) > (1*((UdispRow+1)/2)))
-            {
-                for (int dispImgRow = 0; dispImgRow < dispImg.rows; dispImgRow++ ) 
-                {
-                    if(dispImg.at<uchar>(dispImgRow, UdispCol) == UdispRow)
-                    {
-                        UdispPlanes.at<uchar>(dispImgRow, UdispCol) = UdispRow;
-                    }
-                }
-            } 
-        }
-    }
-    //return UdispPlanes;
-}
-*/
 

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
+
+#include "../defines.h"
 //using namespace cv;
 using namespace std;
 

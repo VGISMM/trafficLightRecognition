@@ -23,6 +23,8 @@
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/common/centroid.h>
 #include <pcl/surface/convex_hull.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
 
 #include "../defines.h"
 
@@ -35,14 +37,17 @@ class PointCloud {
 public:
 	PointCloud();
 	void init(cv::Mat disp, cv::Mat colorImage);
-	bool dispToXYZRGB(cv::Rect regionRect);
-	cv::Point3f projectFrom3Dto2D(cv::Point3f world3Dcoordinate);
+	bool projectRegionToPointCloud(cv::Rect regionRect);
+	bool findRoadSurfaceCoefficients();
+	
 	cv::Mat biggerDisp;
     cv::Mat biggerLOI;
-    cv::Point3f clusterCenter3Dpoint, cluster3DWidthHeightDepth, clusterFront3Dpoint;
+    cv::Point3f clusterCenter3Dpoint, cluster3DWidthHeightDepth, clusterFront3Dpoint, pointProjected2Plane;
+    float pointDistanceFromPlane;
     // , clusterRight3Dpoint, clusterLeft3Dpoint, upperLeftCorner3Dpoint, lowerRightCorner3Dpoint;
-
+    
 private:
 	int vIt = 0;
-	
+	cv::Point3f projectFrom3Dto2D(cv::Point3f world3Dcoordinate);
+	Eigen::VectorXf opt_model_coefficients;
 };

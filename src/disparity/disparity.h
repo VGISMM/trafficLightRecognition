@@ -12,12 +12,12 @@
 #include <time.h>
 #include <thread>
 
-/*
+
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_runtime.h>
-#include "../kernels/mykernel.h"
-*/
+#include "../kernels/mykernels.h"
+
 #include "../defines.h"
 
 using namespace std;
@@ -26,11 +26,11 @@ using namespace std;
 
 class Disparity {
 public:
-
+	cv::StereoSGBM sgbm;
 	cv::gpu::DisparityBilateralFilter *dbf;  
 	cv::gpu::StereoBM_GPU *gpubm; 
-	cv::gpu::GpuMat imgLOIGPU, imgROIGPU, imgLOIGPUflip, imgROIGPUflip;
-	cv::gpu::GpuMat dispLRGPU, dispRLGPU, dispRLGPUflip, dispRLLRGPU, dispFinished;
+	cv::gpu::GpuMat imgLOIGPU, imgROIGPU, dispFinished;
+
 	cv::Mat imgL, imgR, dispLR, dispRL, dispRLLR;
 	cv::Mat combinedDisps=cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);
     cv::Mat temporalCombinedDisps=cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);
@@ -38,20 +38,19 @@ public:
     cv::Mat postDarkImage=cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);
     
 	Disparity();
-	void disparityImages();
+	void GPUBMdisparity();
 	void temporalDisparity();
-	void vDispThresholdedImage(float slope, float intersection, float thresholdOffset);
+	void SGBMdisparity();
+	void vDispThresholdedImage(cv::Mat dispImg, float slope, float intersection, float thresholdOffset);
 	void removeDarkRegions(cv::Mat orgImgLoi);
 
-	//void generateVdisp(cv::Mat h_disp);
-	void generateUdisp(cv::Mat dispImg);
+	void generateVdisp(cv::Mat h_disp);
+	void generateVdispCPU(cv::Mat dispImg) ;
 
-	//cv::Mat vdispU16 = cv::Mat::zeros(IMAGEHEIGHT, 255, CV_16U);
+	cv::Mat vdispU16 = cv::Mat::zeros(IMAGEHEIGHT, 255, CV_16U);
 	cv::Mat vdisp = cv::Mat::zeros(IMAGEHEIGHT, 255, CV_8UC1);
-	cv::Mat Udisp = cv::Mat::zeros(255, IMAGEWIDTH, CV_8UC1);
-	//cv::Mat reducedImg = cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);
-	cv::Mat VdispPlanes = cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);
-	cv::Mat UdispPlanes = cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);
+	cv::Mat vdispCPU = cv::Mat::zeros(IMAGEHEIGHT, 255, CV_8UC1);
+
 private:
 	cv::Mat temporalDisp;
 	cv::Vec3b pixelValueBGR;
