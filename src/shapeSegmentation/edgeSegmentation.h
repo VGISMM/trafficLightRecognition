@@ -6,14 +6,12 @@
 
 #include "../defines.h"
 
-using namespace std;
-
 class EdgeSegmentation {
 public:
   EdgeSegmentation();
-  
+  cv::Mat edgeMap;
   void findEdges(cv::Mat frame);
-  
+  cv::vector<cv::Vec3f> circles;
 private:
  
 

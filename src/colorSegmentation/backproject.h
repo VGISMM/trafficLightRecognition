@@ -14,7 +14,7 @@ public:
   
   void init();
   void backproject(cv::Mat frame);
-  cv::Mat greenBP, redBP;
+  cv::Mat greenBP, redBP, outBP;
 private:
   
   cv::Mat greenHistogram, redHistogram, objectHistogram1, objectHistogram2;

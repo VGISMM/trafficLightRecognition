@@ -39,6 +39,7 @@ public:
 	void init(cv::Mat disp, cv::Mat colorImage);
 	bool projectRegionToPointCloud(cv::Rect regionRect);
 	bool findRoadSurfaceCoefficients();
+	bool createCompletePointCloud(cv::Mat RGBcolorImage);
 	
 	cv::Mat biggerDisp;
     cv::Mat biggerLOI;

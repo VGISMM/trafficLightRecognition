@@ -29,7 +29,7 @@ public:
 	cv::StereoSGBM sgbm;
 	cv::gpu::DisparityBilateralFilter *dbf;  
 	cv::gpu::StereoBM_GPU *gpubm; 
-	cv::gpu::GpuMat imgLOIGPU, imgROIGPU, dispFinished;
+	cv::gpu::GpuMat imgLOIGPU, imgROIGPU, lowerDispFinished, upperDispFinished;
 
 	cv::Mat imgL, imgR, dispLR, dispRL, dispRLLR;
 	cv::Mat combinedDisps=cv::Mat::zeros(IMAGEHEIGHT,IMAGEWIDTH, CV_8UC1);

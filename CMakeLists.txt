@@ -25,6 +25,8 @@ ADD_EXECUTABLE(main
             src/blobAnalysis/blobAnalysis.cpp
             src/colorSegmentation/backproject.cpp
             src/colorSegmentation/emGMM.cpp
+            src/colorSegmentation/spotLightDetection.cpp
+            src/shapeSegmentation/edgeSegmentation.cpp
             src/pressentation/pressentation.cpp
             src/pointCloud/pointCloud.cpp
             src/trafficSignal/trafficSignal.cpp

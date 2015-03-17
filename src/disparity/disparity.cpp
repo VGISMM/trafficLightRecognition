@@ -4,9 +4,6 @@ Disparity::Disparity()
 	dbf = new cv::gpu::DisparityBilateralFilter();   
 	gpubm = new cv::gpu::StereoBM_GPU();
 	gpubm->preset = cv::gpu::StereoBM_GPU::BASIC_PRESET;
-	gpubm->ndisp = 96;
-	gpubm->winSize = 9;
-  gpubm->avergeTexThreshold = 2;
 
   sgbm.preFilterCap = 1;
   sgbm.SADWindowSize = 9;
@@ -24,10 +21,17 @@ Disparity::Disparity()
 void Disparity::GPUBMdisparity() 
 { 
   cv::gpu::GpuMat grayLOIGPU, grayROIGPU;
-  cv::gpu::cvtColor(imgLOIGPU, grayLOIGPU, cv::COLOR_BGR2GRAY);
-  cv::gpu::cvtColor(imgROIGPU, grayROIGPU, cv::COLOR_BGR2GRAY);
-	// LR BM
   cv::gpu::GpuMat dispLRGPU, dispRLGPU;
+  cv::gpu::GpuMat imgLOIGPUflip, imgROIGPUflip, dispRLGPUflip;
+  cv::gpu::GpuMat dispRLLRGPU;
+
+  gpubm->ndisp = 80;
+  gpubm->winSize = 9;
+  gpubm->avergeTexThreshold = 3;
+  //-----------------------------------Upper disp-------------------------------------------------
+  cv::gpu::cvtColor(imgLOIGPU(cv::Rect(cv::Point(0,0), cv::Size(IMAGEWIDTH, IMAGEHEIGHT/2))), grayLOIGPU, cv::COLOR_BGR2GRAY);
+  cv::gpu::cvtColor(imgROIGPU(cv::Rect(cv::Point(0,0), cv::Size(IMAGEWIDTH, IMAGEHEIGHT/2))), grayROIGPU, cv::COLOR_BGR2GRAY);
+	// LR BM
   auto bmstart = chrono::steady_clock::now();
 	gpubm->operator()(grayLOIGPU, grayROIGPU, dispLRGPU);
   auto bmend = chrono::steady_clock::now();
@@ -37,19 +41,39 @@ void Disparity::GPUBMdisparity()
 	//cv::gpu::normalize(dispLRGPU, dispLRGPU, 0, 255, CV_MINMAX, CV_8U);
 
 	// RL BM
-  cv::gpu::GpuMat imgLOIGPUflip, imgROIGPUflip, dispRLGPUflip;
 	cv::gpu::flip(grayLOIGPU,imgLOIGPUflip,1);
 	cv::gpu::flip(grayROIGPU,imgROIGPUflip,1);
 	gpubm->operator()(imgROIGPUflip, imgLOIGPUflip, dispRLGPUflip);
 	//cv::gpu::normalize(dispRLGPUflip, dispRLGPUflip, 0, 255, CV_MINMAX, CV_8U);
 	cv::gpu::flip(dispRLGPUflip,dispRLGPU,1);
 
-  //cv::gpu::GpuMat dispRLLRGPU;
   // RLLR consistency check
-  cv::gpu::min(dispLRGPU,dispRLGPU,dispFinished); //dispRLLRGPU);
-
+  cv::gpu::min(dispLRGPU,dispRLGPU,upperDispFinished); //dispRLLRGPU);
+  
   // bilateral filtering
-  //dbf->operator()(dispRLLRGPU, imgLOIGPU, dispFinished);    
+  //dbf->operator()(dispRLLRGPU, imgLOIGPU, upperDispFinished); 
+//-----------------------------------Lower disp-------------------------------------------------
+  gpubm->ndisp = 96;
+  gpubm->winSize = 7;
+  gpubm->avergeTexThreshold = 1;
+
+  cv::gpu::cvtColor(imgLOIGPU(cv::Rect(cv::Point(0,IMAGEHEIGHT/2), cv::Size(IMAGEWIDTH, IMAGEHEIGHT/2))), grayLOIGPU, cv::COLOR_BGR2GRAY);
+  cv::gpu::cvtColor(imgROIGPU(cv::Rect(cv::Point(0,IMAGEHEIGHT/2), cv::Size(IMAGEWIDTH, IMAGEHEIGHT/2))), grayROIGPU, cv::COLOR_BGR2GRAY);
+
+  gpubm->operator()(grayLOIGPU, grayROIGPU, dispLRGPU);
+  
+  // RL BM
+  cv::gpu::flip(grayLOIGPU,imgLOIGPUflip,1);
+  cv::gpu::flip(grayROIGPU,imgROIGPUflip,1);
+  gpubm->operator()(imgROIGPUflip, imgLOIGPUflip, dispRLGPUflip);
+  //cv::gpu::normalize(dispRLGPUflip, dispRLGPUflip, 0, 255, CV_MINMAX, CV_8U);
+  cv::gpu::flip(dispRLGPUflip,dispRLGPU,1);
+
+  // RLLR consistency check
+  cv::gpu::min(dispLRGPU,dispRLGPU,lowerDispFinished); //dispRLLRGPU);
+  
+  // bilateral filtering
+  //dbf->operator()(dispRLLRGPU, imgLOIGPU, lowerDispFinished); 
 }
 
 void Disparity::SGBMdisparity() 

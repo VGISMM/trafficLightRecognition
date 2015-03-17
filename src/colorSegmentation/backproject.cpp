@@ -77,11 +77,12 @@ void Backproject::backproject(cv::Mat frame){
   //imshow("frame",frame);
   calcBackProject(&frame, 1, channels, greenHistogram, greenBP, ranges);
   calcBackProject(&frame, 1, channels, redHistogram, redBP, ranges);
-  threshold( greenBP, greenBP, 40, 255, 0 );
-  threshold( redBP, redBP, 40, 255, 0 );
+  threshold( greenBP, greenBP, 15, 255, 0 );
+  threshold( redBP, redBP, 25, 255, 0 );
+
   //imshow("greenBP",greenBP);
   // Visualize the segmented lights
-  cv::Mat outBP;
+
   vector<cv::Mat> BPchannels;
 
   BPchannels.push_back(redBP);
@@ -89,5 +90,12 @@ void Backproject::backproject(cv::Mat frame){
   BPchannels.push_back(redBP);
 
   merge(BPchannels,outBP);
+
+  cv::Mat sel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+  dilate(outBP, outBP, sel, cv::Point(-1, -1), 2, 1, 3);
+  morphologyEx( outBP, outBP, cv::MORPH_CLOSE, sel, cv::Point(-1,-1), 1 );
+  morphologyEx( outBP, outBP, cv::MORPH_OPEN, sel, cv::Point(-1,-1), 1 );
+  cvtColor(outBP, outBP, CV_RGB2GRAY);
+  //cv::resize(outBP,outBP,cv::Size(),0.5,0.5,CV_INTER_LINEAR);
   //imshow("BPchannels",outBP);
 }

@@ -271,6 +271,70 @@ bool PointCloud::projectRegionToPointCloud(cv::Rect regionRect)
   return false;
 }
 
+bool PointCloud::createCompletePointCloud(cv::Mat RGBcolorImage)
+{
+  float            x, y, z; 
+  int              r, g, b;
+  //int              nPoints = 0;
+  int              i, j, k;
+  unsigned short   disparity;
+
+  // The format for the output file is:
+  // <x> <y> <z> <red> <grn> <blu>
+  // <x> <y> <z> <red> <grn> <blu>
+  // ...
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_xyzRGBcloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr point_xyzCloudPtr (new pcl::PointCloud<pcl::PointXYZ>);
+
+  // Only creates cloud for lower half of image
+  for ( i = 0; i < IMAGEHEIGHT; i++ )
+  {
+    for ( j = 0; j < IMAGEWIDTH; j++ )
+    {
+      unsigned short disparity = (unsigned short)biggerDisp.at<uchar>(i, j);
+      // do not save invalid points
+      if ( disparity>1 && disparity < 255 )
+      {
+        float z = (FOCALLENTH*BASELINE)/(float)disparity;
+        float x = (j*z)/FOCALLENTH; //i = row
+        float y = (i*z)/FOCALLENTH; //j = col
+
+        pcl::PointXYZ point;
+        point.x = x;
+        point.y = y;
+        point.z = z;
+        point_xyzCloudPtr->points.push_back(point);
+
+        // get color values
+        b = (int)RGBcolorImage.at<cv::Vec3b>(i,j)[0];
+        g = (int)RGBcolorImage.at<cv::Vec3b>(i,j)[1];
+        r = (int)RGBcolorImage.at<cv::Vec3b>(i,j)[2];
+
+        pcl::PointXYZRGB pointRGB;
+        pointRGB.x = x;
+        pointRGB.y = y;
+        pointRGB.z = z;
+        uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
+        static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
+        pointRGB.rgb = *reinterpret_cast<float*>(&rgb);
+        point_xyzRGBcloud_ptr->points.push_back(pointRGB);
+      }
+    }
+  }
+
+  point_xyzRGBcloud_ptr->width = (int) point_xyzRGBcloud_ptr->points.size();
+  point_xyzRGBcloud_ptr->height = 1;
+  point_xyzRGBcloud_ptr->is_dense = false;
+
+  point_xyzCloudPtr->width = (int) point_xyzCloudPtr->points.size();
+  point_xyzCloudPtr->height = 1;
+  point_xyzCloudPtr->is_dense = false;
+
+  pcl::io::savePLYFileASCII("output/point_xyzRGBcloud_ptrComplete.ply",*point_xyzRGBcloud_ptr);
+
+  return true;
+}
+
 cv::Point3f PointCloud::projectFrom3Dto2D(cv::Point3f world3Dcoordinate)
 {
     cv::Point3f world2Dcoordiante;
