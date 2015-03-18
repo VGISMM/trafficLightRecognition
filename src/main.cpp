@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   output.open( "output/out.avi", CV_FOURCC('M','J','P','G'), 16, cv::Size (IMAGEWIDTH*2+255,IMAGEHEIGHT), true );
 
   cv::Mat img, imgLOI, imgROI, imgPressentation;  // Input images  , imgLGray, imgRGray; 
-  cv::Mat dispOutFinished, dispLower, dispUpper, vdispout, dst; // Output images
+  cv::Mat dispOutFinished, dispLower, dispUpper, vdispout, bitwisedOutput; // Output images
   cv::Mat dstYCrCb, dstLUV, dstCbUV; // Colorspaces
   
   #ifdef backdef
@@ -156,10 +156,11 @@ int main(int argc, char **argv) {
     #ifdef backdef
     Backproject.backproject(dstCbUV);
     bitwise_and(SpotLightDetection.topHat,Backproject.outBP,dst);
-    threshold( dst, dst, 10, 255,0 );
-    BlobAnalysis.extractBlobs(dst, imgLOI);
-    cv::resize(dst,dst,cv::Size(),0.5,0.5,CV_INTER_LINEAR);
-    imshow("dst",dst);
+    threshold(bitwisedOutput, bitwisedOutput, 10, 255,0 );
+    BlobAnalysis.extractBlobs(bitwisedOutput, imgLOI);
+    
+    cv::resize(bitwisedOutput,bitwisedOutput,cv::Size(),0.5,0.5,CV_INTER_LINEAR);
+    imshow("bitwisedOutput",bitwisedOutput);
     //BlobAnalysis.extractBlobs(Backproject.greenBP(cv::Rect(cv::Point(BOXSIZE,BOXSIZE), cv::Size(IMAGEWIDTH-BOXSIZE, IMAGEHEIGHT-BOXSIZE))), imgLOI(cv::Rect(cv::Point(BOXSIZE,BOXSIZE), cv::Size(IMAGEWIDTH-BOXSIZE, IMAGEHEIGHT-BOXSIZE))));
     //BlobAnalysis.extractBlobs(Backproject.redBP(cv::Rect(cv::Point(BOXSIZE,BOXSIZE), cv::Size(IMAGEWIDTH-BOXSIZE, IMAGEHEIGHT-BOXSIZE))), imgLOI(cv::Rect(cv::Point(BOXSIZE,BOXSIZE), cv::Size(IMAGEWIDTH-BOXSIZE, IMAGEHEIGHT-BOXSIZE))));
     #endif
