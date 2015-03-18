@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
     
     cvtColor(imgLOI, dstLUV, CV_BGR2Luv);
     split(dstLUV, channelLuv);
-    channels.push_back(channelYCrCb[1]);
+    channels.push_back(channelLuv[0]);
     channels.push_back(channelLuv[1]);
     channels.push_back(channelLuv[2]);
     merge(channels,dstCbUV); // combined
