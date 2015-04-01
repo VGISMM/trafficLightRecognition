@@ -5,6 +5,13 @@
 #define numberOfTrainingSamples 20
 
 #define distanceMultiplier 3.0
+
+#define eucliadianDistanceThreshold 20.0
+
+#define minBoundingRectDim 1
+#define maxBoundingRectDim 30
+#define minBoundingRectRatio 0.5
+
 #define egoCarOfset 2.0
 
 #define BOXSIZE 22

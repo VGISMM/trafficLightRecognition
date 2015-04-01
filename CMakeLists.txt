@@ -23,9 +23,12 @@ ADD_EXECUTABLE(main
             src/main.cpp
             src/disparity/disparity.cpp
             src/blobAnalysis/blobAnalysis.cpp
+            src/candidateEvaluator/candidateEvaluator.cpp
             src/colorSegmentation/backproject.cpp
+            src/colorSegmentation/colorLight/colorLight.cpp
             src/colorSegmentation/emGMM.cpp
             src/colorSegmentation/spotLightDetection.cpp
+            src/colorSegmentation/spotLight/spotLight.cpp
             src/shapeSegmentation/edgeSegmentation.cpp
             src/pressentation/pressentation.cpp
             src/pointCloud/pointCloud.cpp

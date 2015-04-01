@@ -25,8 +25,17 @@ public:
 	//cv::vector<cv::Point3f> directionVectors;
 	cv::Point3f vehicleKalman2DPoint;
 	cv::Point3f vehicleKalman3DPoint;
+	cv::Scalar trafficLightColor;
+
+	bool spotLight = false;
+	bool colorLight = false;
+	float spotLightConfidence = 0;
+	float colorLightConfidence = 0;
 
 	cv::Rect rect2d;
+	float spotLightRectRatio, spotLightSolidity, spotLightFloodRatio;
+	float colorConfidence, colorRectRatio, colorFloodRatio;
+
 	cv::Point3f upperLeftCorner, lowerRightCorner, nearestPoint, rightPoint, leftPoint;
 	
 	int bestMatchIndex=0;
@@ -36,6 +45,8 @@ public:
 	
 	bool detectedBefore = false;
 	void findTrafficSignalsImageCoordiantes();
+	void calculateSpotLightConfidence();
+	void calculateColorLightConfidence();
 
 private:
 	cv::Point3f projectFrom3Dto2D(cv::Point3f world3Dcoordinate);

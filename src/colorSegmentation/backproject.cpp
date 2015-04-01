@@ -36,7 +36,7 @@ void Backproject::init(){
   imwrite("data/redTraining/redHistImg.png", showHistogram(redHistogram));
 }
 
-void Backproject::backproject(cv::Mat frame){
+void Backproject::backproject(){
   const int channels[] = {1, 2};
   float range[] = { 0, 256 };
   const float *ranges[] = { range, range };
@@ -57,34 +57,108 @@ void Backproject::backproject(cv::Mat frame){
   imwrite("data/greenTraining/globalHistogram.png", showHistogram(globalHistogram));
   imwrite("data/redTraining/redHistImg1.png", showHistogram(redHistogram));
   */
-  //imshow("frame",frame);
+  //imshow("intensity",intensity);
 
-  calcBackProject(&frame, 1, channels, greenHistogram, greenBP, ranges);
-  calcBackProject(&frame, 1, channels, redHistogram, redBP, ranges);
-  threshold( greenBP, greenBP, 30, 255, 0 );
-  threshold( redBP, redBP, 30, 255, 0 );
+  calcBackProject(&colorFrame, 1, channels, greenHistogram, greenBP, ranges);
+  calcBackProject(&colorFrame, 1, channels, redHistogram, redBP, ranges);
+  threshold( greenBP, greenBP, 15, 255, 0 );
+  threshold( redBP, redBP, 20, 255, 0 );
 
-  //imshow("greenBP",greenBP);
-  // Visualize the segmented lights
+  locateTrafficLights(greenBP, 0);
+  locateTrafficLights(redBP, 2);
 
+  // Visualize the segmented lights directly
   vector<cv::Mat> BPchannels;
-
   BPchannels.push_back(redBP);
   BPchannels.push_back(greenBP);
   BPchannels.push_back(redBP);
 
   merge(BPchannels,outBP);
-
-  cv::Mat sel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
-  dilate(outBP, outBP, sel, cv::Point(-1, -1), 2, 1, 3);
-  morphologyEx( outBP, outBP, cv::MORPH_CLOSE, sel, cv::Point(-1,-1), 1 );
-  morphologyEx( outBP, outBP, cv::MORPH_OPEN, sel, cv::Point(-1,-1), 1 );
-    cv::Mat cloneBP = outBP.clone();
-  cv::resize(cloneBP,cloneBP,cv::Size(),0.5,0.5,CV_INTER_LINEAR);
-  imshow("BPchannels",cloneBP);
-
-  cvtColor(outBP, outBP, CV_RGB2GRAY);
+/*
+  for( int i = 0; i< detectedColorLights.size(); i++ )
+  {
+    rectangle(outBP, detectedColorLights[i].ROI, cv::Scalar( 0, 255, 255 ), 1, 4 );
+  }
+  
+  cv::resize(outBP,outBP,cv::Size(),0.5,0.5,CV_INTER_LINEAR);
+  imshow("BPchannels",outBP); 
+  */
 }
+
+void Backproject::locateTrafficLights(cv::Mat BPChannel, int color){
+  cv::Mat sel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+  dilate(BPChannel, BPChannel, sel, cv::Point(-1, -1), 2, 1, 3);
+  morphologyEx( BPChannel, BPChannel, cv::MORPH_CLOSE, sel, cv::Point(-1,-1), 1 );
+  morphologyEx( BPChannel, BPChannel, cv::MORPH_OPEN, sel, cv::Point(-1,-1), 1 );
+
+  cv::vector<cv::vector<cv::Point>> contours; 
+  cv::vector<cv::Vec4i> hierarchy;
+  findContours( BPChannel.clone(), contours, hierarchy,CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE  ); 
+
+  cv::Rect tempRect, floodRect;
+  for( int i = 0; i< contours.size(); i++ )
+  { 
+    tempRect = boundingRect(contours[i]);
+    float rectRatio;
+    if(tempRect.width < tempRect.height)
+    {
+      rectRatio = (float)tempRect.width/(float)tempRect.height;
+    }
+    else
+    {
+      rectRatio = (float)tempRect.height/(float)tempRect.width;
+    }
+    if (tempRect.width > minBoundingRectDim && tempRect.width < maxBoundingRectDim && tempRect.height > minBoundingRectDim && tempRect.height < maxBoundingRectDim && rectRatio > minBoundingRectRatio)
+    {
+      float tempRectArea = (float)tempRect.width*(float)tempRect.height;
+      cv::Mat tempMat = intensity(tempRect);
+      cv::Scalar confidence = mean(tempMat);
+      
+      // alternative using id of max intensity pixel as seed
+      double max;
+      cv::Point maxPoint;
+      minMaxLoc(tempMat, NULL, &max, NULL, &maxPoint);
+      floodFill(intensity.clone(), cv::Point(tempRect.x+maxPoint.x, tempRect.y+maxPoint.y), cvScalar(255,0,0), &floodRect, cvScalarAll(50), cvScalarAll(20), 8 | ( 255 << 8 ) | cv::FLOODFILL_FIXED_RANGE);
+      
+/*
+      // Using id of median intensity pixel as seed, center column
+      cv::Mat sortedIndexes;
+      cv::sortIdx(tempMat, sortedIndexes, CV_SORT_EVERY_COLUMN + CV_SORT_ASCENDING);
+      int medianRowIndex = sortedIndexes.at<uchar>(sortedIndexes.rows/2, sortedIndexes.cols/2);
+
+      // debug
+      //int medianIntensity = intensity.at<uchar>(tempRect.y+medianRowIndex, tempRect.x+tempRect.width/2);
+      //cv::Point medianPoint = cv::Point(medianRowIndex,sortedIndexes.cols/2);
+      //cout << "value: " << medianIntensity << " " << medianPoint << endl;
+      floodFill(intensity.clone(), cv::Point(tempRect.x+tempRect.width/2, tempRect.y+medianRowIndex), cvScalar(255,0,0), &floodRect, cvScalarAll(30), cvScalarAll(40), 8 | ( 255 << 8 ) | cv::FLOODFILL_FIXED_RANGE);
+*/
+      float floodArea = (float)floodRect.width*(float)floodRect.height;
+      float floodRatio;
+      if(floodArea < tempRectArea)
+      {
+        floodRatio = floodArea/tempRectArea;
+      }
+      else
+      {
+        floodRatio = tempRectArea/floodArea;
+      }
+      if(floodRatio > 0.4)
+      {
+        //cout << "Contour index: " << i << " confidence: " << confidence[0]/255 << " tempRectArea: " << tempRectArea << " floodArea: " << floodArea << " floodRatio: " << floodRatio << " rectRatio: " << rectRatio << endl;
+        ColorLight tempDetectedColorLight;
+        tempDetectedColorLight.color = color;
+        tempDetectedColorLight.ROI = tempRect;
+        tempDetectedColorLight.rectRatio = rectRatio;
+        tempDetectedColorLight.floodRatio = floodRatio;
+        tempDetectedColorLight.confidence = confidence[0]/255;
+        detectedColorLights.push_back(tempDetectedColorLight); 
+      }
+    }
+  }
+}
+
+
+
 
 cv::Mat Backproject::showHistogram(cv::Mat histogram){
   // Visualize histograms
