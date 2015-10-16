@@ -6,4 +6,4 @@ cmake .
 
 make
 
-./main <path to video clip> <path to GT txt file>
+./main "path to video clip or frames" "path to GT txt file"
