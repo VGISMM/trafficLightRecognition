@@ -3,7 +3,6 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/contrib/contrib.hpp"
 
 #include <stdio.h>
 #include <iostream>
@@ -16,25 +15,34 @@ using namespace std;
 class TrafficSignal {
 public:
 	TrafficSignal();
+
 	cv::Point3f trafficSignalPosition, trafficSignalPosition2D, trafficSignalPlanePoint, trafficSignalPlanePoint2D;
 
-	cv::vector<cv::Point3f> image2Dpositions;
-	cv::vector<cv::Point3f> world3Dpositions;
-	cv::vector<cv::Point3f> widthHeightDepth;
+	std::vector<cv::Point3f> image2Dpositions;
+	std::vector<cv::Point3f> world3Dpositions;
+	std::vector<cv::Point3f> widthHeightDepth;
 	float heightAboveRoad;
 	//cv::vector<cv::Point3f> directionVectors;
 	cv::Point3f vehicleKalman2DPoint;
 	cv::Point3f vehicleKalman3DPoint;
 	cv::Scalar trafficLightColor;
 
-	bool spotLight = false;
-	bool colorLight = false;
-	float spotLightConfidence = 0;
-	float colorLightConfidence = 0;
+	int color;
 
-	cv::Rect rect2d;
-	float spotLightRectRatio, spotLightSolidity, spotLightFloodRatio;
-	float colorConfidence, colorRectRatio, colorFloodRatio;
+	bool TP = false;
+	bool TN = false;
+	bool FP = true;
+
+	//bool spotLight = false;
+	//bool colorLight = false;
+	float TLConfidence = 0;
+	//float colorLightConfidence = 0;
+
+	cv::Rect rect2d, lampRect;
+
+	float rectRatio, solidity, floodRatio, colorConfidence, meanIntensity;
+	//float spotLightRectRatio, spotLightSolidity, spotLightFloodRatio;
+	//float colorConfidence, colorMeanIntensity, colorRectRatio, colorFloodRatio;
 
 	cv::Point3f upperLeftCorner, lowerRightCorner, nearestPoint, rightPoint, leftPoint;
 	

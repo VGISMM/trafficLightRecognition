@@ -22,7 +22,7 @@ void Kalman::initKalman(float x, float y)
     KF.statePost.setTo(0);
     KF.statePost.at<float>(0, 0) = x;
     KF.statePost.at<float>(1, 0) = y; 
-    KF.transitionMatrix = *(cv::Mat_<float>(4, 4) << 1,0,0,0,   0,1,0,0,  0,0,1,0,  0,0,0,1);
+    KF.transitionMatrix = (cv::Mat_<float>(4, 4) << 1,0,0,0,   0,1,0,0,  0,0,1,0,  0,0,0,1);
 
     setIdentity(KF.measurementMatrix);
     setIdentity(KF.processNoiseCov, cv::Scalar::all(0.004)); //adjust this for faster convergence - but higher noise

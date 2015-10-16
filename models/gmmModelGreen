@@ -1,0 +1,33 @@
+%YAML:1.0
+opencv_ml_em:
+   format: 3
+   training_params:
+      nclusters: 2
+      cov_mat_type: diagonal
+      epsilon: 1.0000000000000000e-02
+      iterations: 3000
+   weights: !!opencv-matrix
+      rows: 1
+      cols: 2
+      dt: d
+      data: [ 6.7443265584896017e-01, 3.2556734415103911e-01 ]
+   means: !!opencv-matrix
+      rows: 2
+      cols: 3
+      dt: d
+      data: [ 1.3658373608039747e+02, 6.8618157528116924e+01,
+          1.6444759794229770e+02, 1.9120496649272127e+02,
+          4.6639501939130348e+01, 1.5765415571895426e+02 ]
+   covs:
+      - !!opencv-matrix
+         rows: 3
+         cols: 3
+         dt: d
+         data: [ 1.9398077141717235e+03, 0., 0., 0.,
+             2.9578614904335871e+02, 0., 0., 0., 1.9852775312865936e+02 ]
+      - !!opencv-matrix
+         rows: 3
+         cols: 3
+         dt: d
+         data: [ 4.4799535480777041e+02, 0., 0., 0.,
+             1.8396017565143129e+02, 0., 0., 0., 3.5200534509723241e+01 ]

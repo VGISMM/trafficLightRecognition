@@ -5,13 +5,16 @@ BlobAnalysis::BlobAnalysis	() {
 }
 
 void BlobAnalysis::extractBlobs(cv::Mat frame, cv::Mat dstCbUV){ 
-	cv::vector<cv::vector<cv::Point>> contours; 
-	cv::vector<cv::Vec4i> hierarchy;
+	std::vector<std::vector<cv::Point>> contours; 
+	std::vector<cv::Vec4i> hierarchy;
 	
 	cv::Mat sel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+	cv::Mat sel1 = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
 	dilate(frame, frame, sel, cv::Point(-1, -1), 1, 1, 3);
-	morphologyEx( frame, frame, cv::MORPH_CLOSE, sel, cv::Point(-1,-1), 1 );
 	morphologyEx( frame, frame, cv::MORPH_OPEN, sel, cv::Point(-1,-1), 1 );
+	morphologyEx( frame, frame, cv::MORPH_CLOSE, se1, cv::Point(-1,-1), 2 );
+	
+	erode(frame, frame, sel, cv::Point(-1, -1), 2, 1, 2);
 	
 	//erode(frame, frame, Mat(), Point(-1, -1), 5, 1, 5);
 

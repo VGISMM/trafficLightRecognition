@@ -5,42 +5,44 @@ project(ADAS)
 SET(CMAKE_CXX_FLAGS "-msse3")
 
 find_package(OpenCV REQUIRED)
-find_package(CUDA REQUIRED)
-set(CUDA_NVCC_FLAGS "-arch=sm_30" CACHE STRING "nvcc flags" FORCE)
-set(CUDA_VERBOSE_BUILD ON CACHE BOOL "nvcc verbose" FORCE)
-include_directories(${CUDA_INCLUDE_DIRS})
+#find_package(CUDA REQUIRED)
+#set(CUDA_NVCC_FLAGS "-arch=sm_30" CACHE STRING "nvcc flags" FORCE)
+#set(CUDA_VERBOSE_BUILD ON CACHE BOOL "nvcc verbose" FORCE)
+#include_directories(${CUDA_INCLUDE_DIRS})
 
-SET(LIB_TYPE STATIC)    #set the lib type
-CUDA_ADD_LIBRARY(myCUDA ${LIB_TYPE} src/kernels/vdispkernel.h src/kernels/vdispkernel.cu)
+#SET(LIB_TYPE STATIC)    #set the lib type
+#CUDA_ADD_LIBRARY(myCUDA ${LIB_TYPE} src/stereo/kernels/vdispkernel.h src/stereo/kernels/vdispkernel.cu)
 
-find_package(PCL 1.3 REQUIRED)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+#find_package(PCL 1.3 REQUIRED)
+#include_directories(${PCL_INCLUDE_DIRS})
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
 
 include_directories( ${OpenCV_INCLUDE_DIRS})
 ADD_EXECUTABLE(main 
             src/main.cpp
-            src/disparity/disparity.cpp
-            src/blobAnalysis/blobAnalysis.cpp
+            #src/stereo/disparity/disparity.cpp
+            src/detectors/blobAnalysis.cpp
             src/candidateEvaluator/candidateEvaluator.cpp
-            src/colorSegmentation/backproject.cpp
-            src/colorSegmentation/colorLight/colorLight.cpp
-            src/colorSegmentation/emGMM.cpp
-            src/colorSegmentation/spotLightDetection.cpp
-            src/colorSegmentation/spotLight/spotLight.cpp
-            src/shapeSegmentation/edgeSegmentation.cpp
+            src/evaluation/evaluation.cpp
+            src/detectors/backproject.cpp
+            src/detectors/colorLight/colorLight.cpp
+            #src/detectors/GMM.cpp
+            src/detectors/spotLightDetection.cpp
+            src/detectors/spotLight/spotLight.cpp
+            src/detectors/thresholdColor.cpp
+            src/detectors/edgeSegmentation.cpp
             src/pressentation/pressentation.cpp
-            src/pointCloud/pointCloud.cpp
+            #src/stereo/pointCloud/pointCloud.cpp
             src/trafficSignal/trafficSignal.cpp
-            src/ransac/ransac.cpp
+            src/stereo/ransac/ransac.cpp
             src/tracking/kalmanfilter2d.cpp
-            src/kernels/mykernels.cpp
+            #src/stereo/kernels/mykernels.cpp
             )
-target_link_libraries(main myCUDA ${PCL_LIBRARIES} ${CUDA_LIBRARIES} ${OpenCV_LIBS})
+            #${PCL_LIBRARIES} myCUDA ${CUDA_LIBRARIES}
+target_link_libraries(main ${OpenCV_LIBS})
 
 ADD_DEFINITIONS(
     -std=c++11 # Or -std=c++0x
     # Other flags
 )
-

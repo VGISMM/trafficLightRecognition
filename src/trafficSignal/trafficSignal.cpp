@@ -4,15 +4,16 @@ TrafficSignal::TrafficSignal(){}
 
 void TrafficSignal::calculateSpotLightConfidence()
 {
+    int components = 5;
 	// spotLightConfidence is a measure of the various ratio's(make sure that each one is < 1),
 	// we vant spotLightConfidence to be high when the ratios are good, to reward having several detectors find the same TL. 
-	spotLightConfidence = 1/(1+((abs(spotLightRectRatio)/3)+(abs(spotLightSolidity)/3)+(abs(spotLightFloodRatio)/3)));
+	TLConfidence = 1/(1+((abs(colorConfidence)/components)+(abs(rectRatio)/components)+(abs(solidity)/components)+(abs(floodRatio)/components)+(abs(meanIntensity)/components)));
 }
 
 void TrafficSignal::calculateColorLightConfidence()
 {
-    //cout << colorFloodRatio << endl;
-	colorLightConfidence = 1/(1+((abs(colorConfidence)/3)+(abs(colorRectRatio)/3)+(abs(colorFloodRatio)/3)));
+    //cout << colorConfidence << " " << rectRatio << " " << solidity << " " << floodRatio << " " << meanIntensity << endl;
+	TLConfidence = colorConfidence + rectRatio + solidity + floodRatio + meanIntensity;
 }
 
 void TrafficSignal::findTrafficSignalsImageCoordiantes()
